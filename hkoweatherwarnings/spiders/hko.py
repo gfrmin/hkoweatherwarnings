@@ -8,8 +8,8 @@ class HkoSpider(scrapy.Spider):
     name = "hko"
     allowed_domains = ["hko.gov.hk"]
 
-    startdate = date(2015, 4, 20)
-    enddate = date(2015, 4, 30)
+    startdate = date(1946, 1, 1)
+    enddate = date(2016, 1, 1)
     datestocrawl = rrule(DAILY, dtstart=startdate, until=enddate)
     start_urls = map(lambda dt: "http://www.hko.gov.hk/cgi-bin/climat/warndb_ea.pl?start_ym=" + dt.strftime("%Y%m%d"), datestocrawl)
 
