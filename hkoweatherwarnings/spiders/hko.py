@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from hkoweatherwarnings.items import warningItem
-from datetime import date
+from datetime import date, timedelta
 from dateutil.rrule import rrule, DAILY
+import re
 
 class HkoSpider(scrapy.Spider):
     name = "hko"
     allowed_domains = ["hko.gov.hk"]
 
     startdate = date(1946, 1, 1)
-    enddate = date(2016, 1, 1)
+    enddate = date.today() - timedelta(days = 1)
     datestocrawl = rrule(DAILY, dtstart=startdate, until=enddate)
     start_urls = map(lambda dt: "http://www.hko.gov.hk/cgi-bin/climat/warndb_ea.pl?start_ym=" + dt.strftime("%Y%m%d"), datestocrawl)
 
     def parse(self, response):
+        warningdate = re.search(r"\((.*)\)", response.css("h1").css("::text").extract()[0]).group(1)
         warningstables = response.css("td td:nth-child(2) table")
         if warningstables != []:
             for warningstable in warningstables:
@@ -21,7 +23,7 @@ class HkoSpider(scrapy.Spider):
                 for warningsrow in warningsrows:
                     warningstds = map(lambda td: td.css("::text").extract()[-1], warningsrow.css("td")[1:])
                     warning = warningItem()
-                    warning['warningdate'] = response.css("h1").css("::text").extract()[0]
+                    warning['warningdate'] = warningdate 
                     warning['warning'] = warningstds[0]
                     warning['issuetime'] = warningstds[1]
                     warning['issuedate'] = warningstds[2]
